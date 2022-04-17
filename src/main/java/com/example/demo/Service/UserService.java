@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.Exceptions.UserNotFoundException;
 import com.example.demo.Models.UserModel;
 import com.example.demo.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,36 @@ public class UserService {
         return "Saved....";
     }
 
-    public UserModel getUserById(Long id){
+    public String updateUserInfo(UserModel userModel,Long userId){
+        UserModel userInfo = userRepository.findByUserId(userId);
+        userInfo.setName(userModel.getName());
+        userInfo.setAge(userModel.getAge());
+        userInfo.setOffered_count(userModel.getOffered_count());
+        userInfo.setTaken_count(userModel.getTaken_count());
+        userInfo.setGender(userModel.getGender());
+        userRepository.save(userInfo);
+        return userInfo.toString();
+    }
+
+    public UserModel findUserById(Long id){
         UserModel userInfo = userRepository.findByUserId(id);
         return userInfo;
+    }
+
+    public String getUserById(Long id){
+        UserModel userInfo = new UserModel();
+        try{
+            userInfo = userRepository.findByUserId(id);
+            if(userInfo == null) {
+                throw  new UserNotFoundException("user not found");
+            }
+
+        }
+        catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+        return userInfo.toString();
+
     }
 
     public String getAllUserRideStatus(){

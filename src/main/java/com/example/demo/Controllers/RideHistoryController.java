@@ -38,37 +38,18 @@ public class RideHistoryController {
             return "No Ride have been taken";
     }
 
-    @GetMapping(path = "/{rideId}/getRideInfoByRideId")
+    @GetMapping(path = "/getRideInfoByRideId/{rideId}")
     public String getRideInfo(@PathVariable("rideId") Long rideId){
         RideHistory rideInfo = new RideHistory();
-        try{
-            rideInfo = historyService.getRideInfoById(rideId);
-            if(rideInfo == null) {
-                return "No Rides have taken till now";
-            }
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
+        rideInfo = historyService.getRideInfoById(rideId);
         return rideInfo.toString();
 
     }
 
     @GetMapping(path = "/{userId}/getUserRideInfo")
     public String getRideInfoByUserId(@PathVariable Long userId){
-        List<RideHistory>historyList = new ArrayList<>();
-        try{
-            historyList = historyService.getRideInfoByUserId(userId);
-            if(historyList.size()==0) {
-                return "No Rides have taken till now";
-            }
-
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return historyList.toString();
+       String response = historyService.getRideInfoByUserId(userId);
+        return response;
     }
 
     @PostMapping(path = "/{userId}/{offerId}/selectRide")
@@ -77,47 +58,15 @@ public class RideHistoryController {
                              @RequestParam int noOfSeats,
                                     @PathVariable("userId") Long userId,
                              @PathVariable("offerId") Long offerId){
-        RideHistory rideHistory = new RideHistory();
-        try {
-            UserModel userInfo = userService.getUserById(userId);
-            OfferedRides offeredRide = offeredRidesService.getOfferedRideByOfferId(offerId);
-            if(userInfo != null && offeredRide != null) {
-                rideHistory.setSource(source);
-                rideHistory.setDestination(destination);
-                rideHistory.setNo_of_seats(noOfSeats);
-                rideHistory.setUserModel(userInfo);
-                rideHistory.setOfferedRides(offeredRide);
-                rideHistory.setEnd_ride(false);
-                offeredRide.setEnd_ride(true);
-                historyService.addRideHistory(rideHistory);
-            }
-            else{
-                throw new NullPointerException("User not Found or ride not found");
-            }
 
-        }
-        catch (Exception e){
-            System.out.println(e);
-        }
-        return rideHistory;
+             RideHistory rideHistory  =   historyService.addRideHistory(source,destination, noOfSeats, userId, offerId);
+              return rideHistory;
     }
 
     @PutMapping(path = "/{rideId}/endRide")
-    public String endRide(@PathVariable("rideId") Long rideId){
-        RideHistory rideHistory = historyService.getRideInfoById(rideId);
-        OfferedRides offeredRide = rideHistory.getOfferedRides();
-        UserModel userModel = userService.getUserById(rideHistory.getUserModel().getUserID());
-        try {
-                rideHistory.setEnd_ride(true);
-                offeredRide.setEnd_ride(true);
-                userModel.setTaken_count(userModel.getTaken_count()+1);
-                offeredRidesService.updateRideInfo(offeredRide.getOfferId(), offeredRide);
-                historyService.addRideHistory(rideHistory);
+    public String endRide(@PathVariable("rideId") Long rideId) {
+        String response = historyService.endRide(rideId);
+        return response;
 
-        }
-        catch (Exception e){
-            System.out.println(e);
-        }
-        return "Ride Ended";
     }
 }

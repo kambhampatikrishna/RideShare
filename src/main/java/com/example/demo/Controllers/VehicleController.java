@@ -30,51 +30,23 @@ public class VehicleController {
 
     @GetMapping(path = "/all")
     public String getAll(){
-        List<VehicleModel>users = vehicleService.getVehiclesRegistered();
-        if(users.size() > 0)
-            return users.toString();
-        else
-            return "No Vehicle has been registered yet";
+        String users = vehicleService.getVehiclesRegistered();
+        return users;
     }
 
 
     @GetMapping(path = "/vehicleNum = {vehicleNo}")
     public String getVehicleByVehicleNo(@PathVariable("vehicleNo") String VehicleNo){
-        try {
-
-            VehicleModel vehicleInfo = vehicleService.getVehicleByVehicleNo(VehicleNo);
-            if(vehicleInfo != null) {
-                return vehicleInfo.toString();
-            }
-            else {
-                return "No Vehicle Added with %s"+VehicleNo;
-            }
-        }
-        catch (Exception msg) {
-            msg.printStackTrace();
-        }
-        return "Not found";
-
+        String vehicle = vehicleService.findVehicleByVehicleNo(VehicleNo);
+        return vehicle;
     }
 
     @PostMapping(path = "/addVehicle/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public VehicleModel saveVehicle(@RequestBody VehicleModel vehicle, @PathVariable("userId") Long userId){
-        try {
-            UserModel userInfo = userService.getUserById(userId);
-            if(userInfo != null) {
-                vehicle.setUserModel(userInfo);
-                vehicleService.addVehicle(vehicle);
-                return vehicle;
-            }
-            else{
-                throw new NullPointerException("User not Found");
-            }
 
-        }
-        catch (Exception e){
-            System.out.println(e);
-        }
-        return vehicle;
+        VehicleModel saved_vehicle = vehicleService.addVehicle(vehicle, userId);
+
+        return saved_vehicle;
     }
 
 
