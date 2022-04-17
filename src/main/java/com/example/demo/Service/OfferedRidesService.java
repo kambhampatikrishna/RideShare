@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.Exceptions.RideOfferNotFoundException;
 import com.example.demo.Models.OfferedRides;
 import com.example.demo.Models.UserModel;
 import com.example.demo.Models.VehicleModel;
@@ -40,47 +41,111 @@ public class OfferedRidesService {
 
     public List<OfferedRides> getOfferedRideByVehicleNo(OfferedRides offeredRide){
         List<OfferedRides> ride = new ArrayList<>();
-        ride = offeredRidesRepository.getOfferedRidesByVehicleNo(offeredRide.getVehicleInfo().getVehicleNo());
+        try {
+            ride = offeredRidesRepository.getOfferedRidesByVehicleNo(offeredRide.getVehicleInfo().getVehicleNo());
+            if (ride == null){
+                throw  new RideOfferNotFoundException("No Rides have been offered by the vehicle - "+offeredRide.getVehicleInfo().getVehicleNo());
+            }
+        }
+        catch (Exception msg){
+            System.out.println(msg.getMessage());
+        }
         return ride;
     }
     public OfferedRides getOfferedRideByOfferId(Long offerId){
-        OfferedRides offeredRide = offeredRidesRepository.findByOfferId(offerId);
+        OfferedRides offeredRide = new OfferedRides();
+        try {
+            offeredRide = offeredRidesRepository.findByOfferId(offerId);
+            if (offeredRide == null){
+                throw  new RideOfferNotFoundException("No Ride has been offered by the vehicle ");
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
         return offeredRide;
     }
 
     public List<OfferedRides> getAllRidesBasedOnSrcAndDestination(String source, String destination, int noOfSeats, boolean mostVacant, String preferredVehicle){
         List<OfferedRides> allRides = new ArrayList<>();
-        if( !mostVacant && preferredVehicle == null) {
-             allRides = offeredRidesRepository.getOfferedRidesBySource(source, destination, noOfSeats);
-             System.out.println("Normal");
-        }
-        else if(mostVacant){
-            allRides = getMostVacantRide(source, destination, noOfSeats);
-            System.out.println("Most Vacant");
+        if( !mostVacant && preferredVehicle.isEmpty()) {
+             try {
+                 allRides = offeredRidesRepository.getOfferedRidesBySource(source, destination, noOfSeats);
+                 if(allRides.size() == 0){
+                     throw  new RideOfferNotFoundException("No Rides have been found with Source - " + source + " Destination -" + destination);
+                 }
+                 else{
+                     return allRides;
+                 }
+             }
+             catch (Exception e){
+                 System.out.println(e.getMessage());
+             }
 
         }
-        else if(preferredVehicle != null){
-            allRides = offeredRidesRepository.getOfferedRidesByVehicleName(source, destination, noOfSeats, preferredVehicle);
-            System.out.println("No of Seats");
+        else if(mostVacant){
+            try {
+                allRides = getMostVacantRide(source, destination, noOfSeats);
+                if(allRides == null){
+                    throw  new RideOfferNotFoundException("No Rides have been found with Source - " + source + " Destination -" + destination + " NoOfSeats - " + noOfSeats);
+                }
+                else {
+                    return allRides;
+                }
+            }
+            catch (Exception e){
+                System.out.println(e.getMessage());
+            }
+
+
+        }
+        else if(!preferredVehicle.isEmpty()){
+            try {
+                allRides = offeredRidesRepository.getOfferedRidesByVehicleName(source, destination, noOfSeats, preferredVehicle);
+                if(allRides == null){
+                    throw  new RideOfferNotFoundException("No Rides have been found with Source - " + source + " Destination -" + destination + " Preferred Vehicle - " + preferredVehicle);
+                }
+                else {
+                    return allRides;
+                }
+            }
+            catch (Exception msg){
+                System.out.println(msg.getMessage());
+
+            }
         }
         return allRides;
 
     }
 
 
-    public void updateRideInfo(Long offerId, OfferedRides updatedRideInfo){
+    public String updateRideInfo(Long offerId, OfferedRides updatedRideInfo){
 
-        OfferedRides rideInfo = offeredRidesRepository.findByOfferId(offerId);
-        VehicleModel vehicleInfo = rideInfo.getVehicleInfo();
-        if(rideInfo != null){
-            rideInfo.setSource(updatedRideInfo.getSource());
-            rideInfo.setDestination(updatedRideInfo.getDestination());
-            rideInfo.setEnd_ride(updatedRideInfo.isEnd_ride());
-            rideInfo.setVehicleInfo(vehicleInfo);
-            rideInfo.setNo_of_seats(updatedRideInfo.getNo_of_seats());
-            rideInfo.setOfferId(offerId);
-            offeredRidesRepository.save(rideInfo);
+        OfferedRides rideInfo  = new OfferedRides();
+        try {
+
+            rideInfo = offeredRidesRepository.findByOfferId(offerId);
+            if(rideInfo != null){
+                    VehicleModel vehicleInfo = rideInfo.getVehicleInfo();
+                    rideInfo.setSource(updatedRideInfo.getSource());
+                    rideInfo.setDestination(updatedRideInfo.getDestination());
+                    rideInfo.setEnd_ride(updatedRideInfo.isEnd_ride());
+                    rideInfo.setVehicleInfo(vehicleInfo);
+                    rideInfo.setNo_of_seats(updatedRideInfo.getNo_of_seats());
+                    rideInfo.setOfferId(offerId);
+                    offeredRidesRepository.save(rideInfo);
+                    return rideInfo.toString();
+            }
+            else {
+               throw  new RideOfferNotFoundException("There is no such a ride");
+            }
         }
+        catch (Exception msg){
+            System.out.println(msg.getMessage());
+        }
+        return rideInfo.toString();
+
     }
 
     public List<OfferedRides> getMostVacantRide(String source, String destination, int noOfSeats){
@@ -95,7 +160,6 @@ public class OfferedRidesService {
             if(no_of_seats >= max){
                 max = no_of_seats;
                 index = i;
-                System.out.println(max+  " seats: "+ no_of_seats);
             }
 
         }

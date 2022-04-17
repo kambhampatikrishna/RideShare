@@ -51,7 +51,7 @@ public class OfferedRidesController {
     public String rideOfferedByUser(@RequestBody OfferedRides offeredRide, @PathVariable("vehicleNo") String vehicleNo, @PathVariable("userId") Long userId){
 
             String res;
-            UserModel userInfo = userService.getUserById(userId);
+            UserModel userInfo = userService.findUserById(userId);
             VehicleModel vehicleModel = vehicleService.getVehicleByVehicleNo(vehicleNo);
             res = offeredRidesService.addRideOffer(offeredRide, userInfo, vehicleModel);
             return res;
@@ -59,18 +59,9 @@ public class OfferedRidesController {
     }
 
     @PutMapping(path = "/change/{offerId}")
-    public OfferedRides changeRideInfo(@RequestBody OfferedRides offeredRide , @PathVariable("offerId") Long offerId){
-        OfferedRides rideInfo = getOfferedRide(offerId);
-        if(rideInfo != null){
-            VehicleModel vehicleInfo = rideInfo.getVehicleInfo();
-            offeredRide.setVehicleInfo(vehicleInfo);
-            offeredRide.setOfferId(offerId);
-            offeredRidesService.updateRideInfo(offerId,offeredRide);
-        }
-        else{
-            System.out.println("There is no such a ride");
-        }
-        return offeredRide;
+    public String changeRideInfo(@RequestBody OfferedRides offeredRide , @PathVariable("offerId") Long offerId){
+        String response = offeredRidesService.updateRideInfo(offerId,offeredRide);
+        return response;
     }
 
 
